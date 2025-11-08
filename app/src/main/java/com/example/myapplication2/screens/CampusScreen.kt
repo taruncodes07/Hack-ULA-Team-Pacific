@@ -62,36 +62,29 @@ fun CampusScreen(onBack: () -> Unit) {
 
     // Entry animation
     LaunchedEffect(Unit) {
-        delay(300)
+        delay(100)
         showContent = true
     }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Blurred campus background
-        Image(
-            painter = painterResource(id = R.drawable.campus_background),
-            contentDescription = "Campus Background",
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(30.dp),
-            contentScale = ContentScale.Crop
-        )
-
-        // Dark overlay
+        // Pure black background
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f))
+                .background(Color.Black)
         )
+
+        // Animated purple particles
+        FloatingPurpleParticles()
 
         // Main content
         AnimatedVisibility(
             visible = showContent,
-            enter = fadeIn(tween(600)) + slideInVertically(
+            enter = fadeIn(tween(300)) + slideInVertically(
                 initialOffsetY = { it },
-                animationSpec = tween(600, easing = FastOutSlowInEasing)
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
             )
         ) {
             Column(
@@ -99,39 +92,25 @@ fun CampusScreen(onBack: () -> Unit) {
                     .fillMaxSize()
                     .padding(24.dp)
             ) {
-                // Profile photo with back navigation
+                // Header with back button and title
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Profile photo
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .border(
-                                width = 3.dp,
-                                brush = Brush.sweepGradient(
-                                    colors = listOf(
-                                        AppPurple,
-                                        AppPurpleSecondary,
-                                        AppPurple
-                                    )
-                                ),
-                                shape = CircleShape
-                            )
-                            .background(AppPurple.copy(alpha = 0.3f), CircleShape)
-                            .clickable { onBack() },
-                        contentAlignment = Alignment.Center
+                    // Back button
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
                     ) {
-                        Text(
-                            text = userName.firstOrNull()?.toString() ?: "S",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AppWhite
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = AppPurple,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         text = "Campus Hub",
@@ -155,22 +134,22 @@ fun CampusScreen(onBack: () -> Unit) {
             }
         }
 
-        // Show sections as dialogs
+        // Show sections as overlays (not dialogs)
         when (currentSection) {
             CampusSection.CANTEEN -> {
-                CanteenDialog(onDismiss = { currentSection = CampusSection.NONE })
+                CanteenOverlay(onDismiss = { currentSection = CampusSection.NONE })
             }
 
             CampusSection.ANNOUNCEMENTS -> {
-                CampusAnnouncementsDialog(onDismiss = { currentSection = CampusSection.NONE })
+                CampusAnnouncementsOverlay(onDismiss = { currentSection = CampusSection.NONE })
             }
 
             CampusSection.FEEDBACK -> {
-                FeedbackDialog(onDismiss = { currentSection = CampusSection.NONE })
+                FeedbackOverlay(onDismiss = { currentSection = CampusSection.NONE })
             }
 
             CampusSection.CROWD_CHECK -> {
-                CrowdCheckDialog(onDismiss = { currentSection = CampusSection.NONE })
+                CrowdCheckOverlay(onDismiss = { currentSection = CampusSection.NONE })
             }
 
             else -> {}
@@ -188,7 +167,7 @@ fun CampusGridButtons(
     var showButtons by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(400)
+        delay(50)
         showButtons = true
     }
 
@@ -219,7 +198,7 @@ fun CampusGridButtons(
                     label = "Notices",
                     onClick = onAnnouncementsClick,
                     buttonSize = buttonSize,
-                    delay = 150,
+                    delay = 50,
                     visible = showButtons
                 )
             }
@@ -229,10 +208,10 @@ fun CampusGridButtons(
             ) {
                 CampusButton(
                     icon = Icons.Default.Feedback,
-                    label = "Send Feedback",
+                    label = "Feedback",
                     onClick = onFeedbackClick,
                     buttonSize = buttonSize,
-                    delay = 300,
+                    delay = 100,
                     visible = showButtons
                 )
 
@@ -241,7 +220,7 @@ fun CampusGridButtons(
                     label = "Live Crowd",
                     onClick = onCrowdCheckClick,
                     buttonSize = buttonSize,
-                    delay = 450,
+                    delay = 150,
                     visible = showButtons
                 )
             }
@@ -296,9 +275,9 @@ fun CampusButton(
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(600, delayMillis = delay)) + scaleIn(
+        enter = fadeIn(tween(250, delayMillis = delay)) + scaleIn(
             initialScale = 0.8f,
-            animationSpec = tween(600, delayMillis = delay)
+            animationSpec = tween(250, delayMillis = delay)
         )
     ) {
         Box(
@@ -387,239 +366,429 @@ fun CampusButton(
 }
 
 @Composable
-fun CanteenDialog(onDismiss: () -> Unit) {
-    GlassmorphicDialog(
-        title = "Order Food",
-        onDismiss = onDismiss
+fun CanteenOverlay(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x99000000))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onDismiss() },
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Canteen ordering feature coming soon...",
-            color = AppLightGrey,
-            modifier = Modifier.padding(20.dp)
-        )
-    }
-}
-
-@Composable
-fun CampusAnnouncementsDialog(onDismiss: () -> Unit) {
-    GlassmorphicDialog(
-        title = "Campus Notices",
-        onDismiss = onDismiss
-    ) {
-        LazyColumn(
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.7f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = false
+                ) { },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = AppPurple.copy(alpha = 0.3f)
+            )
         ) {
-            itemsIndexed(
-                listOf(
-                    Triple(
-                        "Library Closed",
-                        "Library closed for cleaning today. Will reopen tomorrow at 9 AM.",
-                        "🔴"
-                    ),
-                    Triple(
-                        "Pool Maintenance",
-                        "Swimming pool under maintenance until Friday. Please avoid the area.",
-                        "🔵"
-                    ),
-                    Triple(
-                        "Photography Club Meet",
-                        "Photography club meeting today at 4 PM in Room 201. All welcome!",
-                        "🟢"
-                    ),
-                    Triple(
-                        "Exam Form Deadline",
-                        "Last date to submit exam forms is tomorrow. Visit office before 5 PM.",
-                        "🔴"
-                    ),
-                    Triple(
-                        "Tech Fest Registration",
-                        "Register for TechFest 2024 before this weekend. Limited slots!",
-                        "🟣"
-                    ),
-                    Triple(
-                        "Canteen Timing Change",
-                        "Canteen will close at 7 PM this week due to staff shortage.",
-                        "🔵"
+            Column {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppPurple.copy(alpha = 0.8f),
+                                    AppPurpleSecondary.copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Order Food",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppWhite
                     )
-                )
-            ) { index, (title, desc, color) ->
-                AnnouncementCard(title, desc, color, index)
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = AppWhite
+                        )
+                    }
+                }
+
+                // Content
+                Box(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Canteen ordering feature coming soon...",
+                        color = AppLightGrey,
+                        modifier = Modifier.padding(20.dp)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun FeedbackDialog(onDismiss: () -> Unit) {
+fun CampusAnnouncementsOverlay(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x99000000))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onDismiss() },
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.7f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = false
+                ) { },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = AppPurple.copy(alpha = 0.3f)
+            )
+        ) {
+            Column {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppPurple.copy(alpha = 0.8f),
+                                    AppPurpleSecondary.copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Campus Notices",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppWhite
+                    )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = AppWhite
+                        )
+                    }
+                }
+
+                // Content
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        itemsIndexed(
+                            listOf(
+                                Triple(
+                                    "Library Closed",
+                                    "Library closed for cleaning today. Will reopen tomorrow at 9 AM.",
+                                    "🔴"
+                                ),
+                                Triple(
+                                    "Pool Maintenance",
+                                    "Swimming pool under maintenance until Friday. Please avoid the area.",
+                                    "🔵"
+                                ),
+                                Triple(
+                                    "Photography Club Meet",
+                                    "Photography club meeting today at 4 PM in Room 201. All welcome!",
+                                    "🟢"
+                                ),
+                                Triple(
+                                    "Exam Form Deadline",
+                                    "Last date to submit exam forms is tomorrow. Visit office before 5 PM.",
+                                    "🔴"
+                                ),
+                                Triple(
+                                    "Tech Fest Registration",
+                                    "Register for TechFest 2024 before this weekend. Limited slots!",
+                                    "🟣"
+                                ),
+                                Triple(
+                                    "Canteen Timing Change",
+                                    "Canteen will close at 7 PM this week due to staff shortage.",
+                                    "🔵"
+                                )
+                            )
+                        ) { index, (title, desc, color) ->
+                            AnnouncementCard(title, desc, color, index)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FeedbackOverlay(onDismiss: () -> Unit) {
     var selectedCategory by remember { mutableStateOf("Library") }
     var feedbackText by remember { mutableStateOf("") }
     var customSubject by remember { mutableStateOf("") }
     var showSuccess by remember { mutableStateOf(false) }
 
-    GlassmorphicDialog(
-        title = "Send Feedback",
-        onDismiss = onDismiss
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x99000000))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onDismiss() },
+        contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.7f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = false
+                ) { },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = AppPurple.copy(alpha = 0.3f)
+            )
         ) {
-            item {
-                // Category selector
-                Text(
-                    "Category:",
-                    color = AppPurple,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            item {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        listOf("Library", "Canteen").forEach { category ->
-                            FilterChip(
-                                selected = selectedCategory == category,
-                                onClick = { selectedCategory = category },
-                                label = { Text(category, fontSize = 13.sp) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        listOf("Hygiene", "Other").forEach { category ->
-                            FilterChip(
-                                selected = selectedCategory == category,
-                                onClick = { selectedCategory = category },
-                                label = { Text(category, fontSize = 13.sp) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Show custom subject input only when "Other" is selected
-            if (selectedCategory == "Other") {
-                item {
-                    Column {
-                        Text(
-                            "Subject:",
-                            color = AppPurple,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = customSubject,
-                            onValueChange = { customSubject = it },
-                            placeholder = {
-                                Text(
-                                    "Enter complaint subject...",
-                                    color = AppLightGrey.copy(alpha = 0.6f)
-                                )
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = AppWhite,
-                                unfocusedTextColor = AppWhite,
-                                focusedBorderColor = AppPurple,
-                                unfocusedBorderColor = AppPurple.copy(alpha = 0.5f),
-                                cursorColor = AppPurple
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-                    }
-                }
-            }
-
-            item {
-                // Feedback text
-                Column {
-                    Text(
-                        "Feedback:",
-                        color = AppPurple,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = feedbackText,
-                        onValueChange = { feedbackText = it },
-                        placeholder = {
-                            Text(
-                                "Write your feedback...",
-                                color = AppLightGrey.copy(alpha = 0.6f)
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = AppWhite,
-                            unfocusedTextColor = AppWhite,
-                            focusedBorderColor = AppPurple,
-                            unfocusedBorderColor = AppPurple.copy(alpha = 0.5f),
-                            cursorColor = AppPurple
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp),
-                        maxLines = 6
-                    )
-                }
-            }
-
-            item {
-                // Submit button
-                Button(
-                    onClick = {
-                        if (feedbackText.isNotEmpty()) {
-                            showSuccess = true
-                            feedbackText = ""
-                            customSubject = ""
-                        }
-                    },
+            Column {
+                // Header
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppPurple),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Submit Feedback", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            if (showSuccess) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = AppGreen.copy(alpha = 0.2f)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("✅", fontSize = 24.sp)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                "Feedback submitted successfully!",
-                                color = AppGreen,
-                                fontWeight = FontWeight.Bold
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppPurple.copy(alpha = 0.8f),
+                                    AppPurpleSecondary.copy(alpha = 0.8f)
+                                )
                             )
+                        )
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Send Feedback",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppWhite
+                    )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = AppWhite
+                        )
+                    }
+                }
+
+                // Content
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            // Category selector
+                            Text(
+                                "Category:",
+                                color = AppPurple,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        item {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    listOf("Library", "Canteen").forEach { category ->
+                                        FilterChip(
+                                            selected = selectedCategory == category,
+                                            onClick = { selectedCategory = category },
+                                            label = { Text(category, fontSize = 13.sp) },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    listOf("Hygiene", "Other").forEach { category ->
+                                        FilterChip(
+                                            selected = selectedCategory == category,
+                                            onClick = { selectedCategory = category },
+                                            label = { Text(category, fontSize = 13.sp) },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Show custom subject input only when "Other" is selected
+                        if (selectedCategory == "Other") {
+                            item {
+                                Column {
+                                    Text(
+                                        "Subject:",
+                                        color = AppPurple,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    OutlinedTextField(
+                                        value = customSubject,
+                                        onValueChange = { customSubject = it },
+                                        placeholder = {
+                                            Text(
+                                                "Enter complaint subject...",
+                                                color = AppLightGrey.copy(alpha = 0.6f)
+                                            )
+                                        },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedTextColor = AppWhite,
+                                            unfocusedTextColor = AppWhite,
+                                            focusedBorderColor = AppPurple,
+                                            unfocusedBorderColor = AppPurple.copy(alpha = 0.5f),
+                                            cursorColor = AppPurple
+                                        ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            // Feedback text
+                            Column {
+                                Text(
+                                    "Feedback:",
+                                    color = AppPurple,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = feedbackText,
+                                    onValueChange = { feedbackText = it },
+                                    placeholder = {
+                                        Text(
+                                            "Write your feedback...",
+                                            color = AppLightGrey.copy(alpha = 0.6f)
+                                        )
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = AppWhite,
+                                        unfocusedTextColor = AppWhite,
+                                        focusedBorderColor = AppPurple,
+                                        unfocusedBorderColor = AppPurple.copy(alpha = 0.5f),
+                                        cursorColor = AppPurple
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(150.dp),
+                                    maxLines = 6
+                                )
+                            }
+                        }
+
+                        item {
+                            // Submit button
+                            Button(
+                                onClick = {
+                                    if (feedbackText.isNotEmpty()) {
+                                        showSuccess = true
+                                        feedbackText = ""
+                                        customSubject = ""
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AppPurple),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    "Submit Feedback",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        if (showSuccess) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = AppGreen.copy(alpha = 0.2f)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("✅", fontSize = 24.sp)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            "Feedback submitted successfully!",
+                                            color = AppGreen,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -629,19 +798,81 @@ fun FeedbackDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun CrowdCheckDialog(onDismiss: () -> Unit) {
-    GlassmorphicDialog(
-        title = "Live Crowd Status",
-        onDismiss = onDismiss
+fun CrowdCheckOverlay(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x99000000))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onDismiss() },
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.7f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = false
+                ) { },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = AppPurple.copy(alpha = 0.3f)
+            )
         ) {
-            CrowdIndicator("Canteen", 75)
-            CrowdIndicator("Library", 30)
-            CrowdIndicator("Gym", 50)
-            CrowdIndicator("Lab", 20)
+            Column {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppPurple.copy(alpha = 0.8f),
+                                    AppPurpleSecondary.copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Live Crowd Status",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppWhite
+                    )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = AppWhite
+                        )
+                    }
+                }
+
+                // Content
+                Box(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CrowdIndicator("Canteen", 75)
+                        CrowdIndicator("Library", 30)
+                        CrowdIndicator("Gym", 50)
+                        CrowdIndicator("Lab", 20)
+                    }
+                }
+            }
         }
     }
 }
@@ -681,13 +912,13 @@ fun AnnouncementCard(title: String, description: String, colorTag: String, index
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay((index * 100).toLong())
+        delay((index * 50).toLong())
         visible = true
     }
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { 20 }
+        enter = fadeIn(tween(250)) + slideInVertically(tween(250)) { 20 }
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -706,66 +937,6 @@ fun AnnouncementCard(title: String, description: String, colorTag: String, index
                     Text(title, color = AppPurple, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(description, color = AppLightGrey, fontSize = 14.sp)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun GlassmorphicDialog(
-    title: String,
-    onDismiss: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .fillMaxHeight(0.7f),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1A1A1A)
-            )
-        ) {
-            Column {
-                // Header
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(AppPurple, AppPurpleSecondary)
-                            )
-                        )
-                        .padding(20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = title,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppWhite
-                    )
-
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = AppWhite
-                        )
-                    }
-                }
-
-                // Content
-                Box(modifier = Modifier.weight(1f)) {
-                    content()
                 }
             }
         }

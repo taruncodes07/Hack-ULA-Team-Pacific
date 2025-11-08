@@ -80,35 +80,25 @@ fun AnnouncementsScreen(onBack: () -> Unit) {
     // Entry animation sequence
     LaunchedEffect(Unit) {
         showIconTransition = true
-        delay(600)
+        delay(100)
         showContent = true
     }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Blurred campus background
-        Image(
-            painter = painterResource(id = R.drawable.campus_background),
-            contentDescription = "Campus Background",
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(35.dp),
-            contentScale = ContentScale.Crop
-        )
-
-        // Dark gradient overlay
+        // Pure black background
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0x99000000), // rgba(0,0,0,0.6)
-                            Color(0xD9000000)  // rgba(0,0,0,0.85)
-                        )
-                    )
-                )
+                .background(Color.Black)
+        )
+
+        // Dark gradient overlay (70% opacity to match other pages)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f))
         )
 
         // Animated purple particles
@@ -119,8 +109,8 @@ fun AnnouncementsScreen(onBack: () -> Unit) {
             visible = showIconTransition,
             enter = slideInVertically(
                 initialOffsetY = { it },
-                animationSpec = tween(600, easing = FastOutSlowInEasing)
-            ) + fadeIn(tween(600))
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            ) + fadeIn(tween(300))
         ) {
             // Main content
             if (showContent) {
@@ -348,7 +338,7 @@ fun AnnouncementCard(
     var isHovered by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay((index * 100).toLong())
+        delay((index * 50).toLong())
         isVisible = true
     }
 
@@ -366,7 +356,7 @@ fun AnnouncementCard(
 
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 4 }
+        enter = fadeIn(tween(250)) + slideInVertically(tween(250)) { it / 4 }
     ) {
         Card(
             modifier = Modifier

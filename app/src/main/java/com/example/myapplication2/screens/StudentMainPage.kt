@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import android.graphics.BitmapFactory
 import com.example.myapplication2.R
 import com.example.myapplication2.data.EmailUser
 import com.example.myapplication2.data.UserRepository
@@ -54,7 +56,8 @@ private data class StudentParticle(
 @Composable
 fun StudentMainPage(
     onAnnouncementsClick: () -> Unit = {},
-    onCampusClick: () -> Unit = {}
+    onCampusClick: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showContent by remember { mutableStateOf(false) }
@@ -69,19 +72,40 @@ fun StudentMainPage(
     // Get current email profile
     val emailProfile = remember { UserRepository.getCurrentEmailProfile(context) }
 
+    // Load campus background from assets (collegeimage.png/jpg)
+    val campusBackground = remember {
+        val possibleNames = listOf(
+            "collegeimage.png",
+            "collegeimage.jpg",
+            "collegeimage.jpeg"
+        )
+        var bitmap: android.graphics.Bitmap? = null
+
+        for (name in possibleNames) {
+            try {
+                val inputStream = context.assets.open(name)
+                bitmap = BitmapFactory.decodeStream(inputStream)
+                if (bitmap != null) break
+            } catch (e: Exception) {
+                // Try next filename
+            }
+        }
+        bitmap
+    }
+
     // Page load sequence
     LaunchedEffect(Unit) {
-        delay(300)
+        delay(50)
         showContent = true
-        delay(200)
+        delay(50)
         showName = true
-        delay(300)
+        delay(50)
         showRollNumber = true
-        delay(400)
+        delay(50)
         showAI = true
-        delay(300)
+        delay(50)
         showInput = true
-        delay(200)
+        delay(50)
         showButtons = true
     }
 
@@ -92,41 +116,41 @@ fun StudentMainPage(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Campus background with blur
-            Image(
-                painter = painterResource(id = R.drawable.campus_background),
-                contentDescription = "Campus Background",
+            // Blurred campus background from assets
+            if (campusBackground != null) {
+                Image(
+                    bitmap = campusBackground.asImageBitmap(),
+                    contentDescription = "Campus Background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(25.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Fallback to black background if image not found
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                )
+            }
+
+            // Black overlay (70% opacity)
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(30.dp),
-                contentScale = ContentScale.Crop
+                    .background(Color.Black.copy(alpha = 0.7f))
             )
 
             // Animated gradient waves
             AnimatedGradientWaves()
-
-            // Dark overlay with vignette
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.7f),
-                                Color.Black.copy(alpha = 0.85f),
-                                Color.Black.copy(alpha = 0.95f)
-                            ),
-                            radius = 1500f
-                        )
-                    )
-            )
 
             // Floating particles
             FloatingParticles()
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(tween(500))
+                enter = fadeIn(tween(200))
             ) {
                 Column(
                     modifier = Modifier
@@ -141,19 +165,54 @@ fun StudentMainPage(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Name with fade-in - Clickable to open profile
+                        // Name with avatar - Clickable to open profile
                         AnimatedVisibility(
                             visible = showName,
-                            enter = fadeIn(tween(800))
+                            enter = fadeIn(tween(200))
                         ) {
-                            Text(
-                                text = emailProfile?.name ?: "Student",
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AppPurple,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.clickable { showProfileDialog = true }
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                            ) {
+                                // Avatar
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .border(
+                                            width = 2.dp,
+                                            brush = Brush.sweepGradient(
+                                                colors = listOf(
+                                                    AppPurple,
+                                                    AppPurpleSecondary,
+                                                    AppPurple
+                                                )
+                                            ),
+                                            shape = CircleShape
+                                        )
+                                        .background(AppPurple.copy(alpha = 0.3f), CircleShape)
+                                        .clickable { showProfileDialog = true },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = emailProfile?.name?.firstOrNull()?.toString() ?: "S",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = AppWhite
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // Name
+                                Text(
+                                    text = emailProfile?.name ?: "Student",
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppPurple,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -161,9 +220,9 @@ fun StudentMainPage(
                         // Roll number + branch with slide-in
                         AnimatedVisibility(
                             visible = showRollNumber,
-                            enter = fadeIn(tween(800)) + slideInVertically(
+                            enter = fadeIn(tween(200)) + slideInVertically(
                                 initialOffsetY = { 50 },
-                                animationSpec = tween(800)
+                                animationSpec = tween(200)
                             )
                         ) {
                             Text(
@@ -180,9 +239,9 @@ fun StudentMainPage(
                     // AI Assistant Section
                     AnimatedVisibility(
                         visible = showAI,
-                        enter = fadeIn(tween(800)) + scaleIn(
+                        enter = fadeIn(tween(200)) + scaleIn(
                             initialScale = 0.8f,
-                            animationSpec = tween(800)
+                            animationSpec = tween(200)
                         )
                     ) {
                         Column(
@@ -198,7 +257,7 @@ fun StudentMainPage(
                     // AI Input Field
                     AnimatedVisibility(
                         visible = showInput,
-                        enter = fadeIn(tween(600)) + expandVertically()
+                        enter = fadeIn(tween(200)) + expandVertically()
                     ) {
                         AIInputField()
                     }
@@ -208,7 +267,7 @@ fun StudentMainPage(
                     // Feature Grid (4 buttons)
                     AnimatedVisibility(
                         visible = showButtons,
-                        enter = fadeIn(tween(600))
+                        enter = fadeIn(tween(200))
                     ) {
                         FeatureGrid(
                             onAnnouncementsClick = onAnnouncementsClick,
@@ -217,15 +276,6 @@ fun StudentMainPage(
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
-
-                    // Tagline
-                    Text(
-                        text = "Empowering Students. Enhancing Campus Life.",
-                        fontSize = 11.sp,
-                        color = AppLightGrey.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
                 }
             }
 
@@ -235,9 +285,9 @@ fun StudentMainPage(
                     emailProfile = emailProfile,
                     onDismiss = { showProfileDialog = false },
                     onLogout = {
-                        // Sign out and exit app
+                        // Sign out and navigate back
                         UserRepository.signOut(context)
-                        android.os.Process.killProcess(android.os.Process.myPid())
+                        onLogout()
                     }
                 )
             }
@@ -397,7 +447,7 @@ fun AIAssistantCircle() {
     LaunchedEffect(isPressed) {
         if (isPressed) {
             showListening = true
-            delay(2000)
+            delay(200)
             showListening = false
             isPressed = false
         }
@@ -477,7 +527,7 @@ fun ListeningAnimation() {
                 initialValue = 0.5f,
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(600, easing = LinearEasing, delayMillis = index * 200),
+                    animation = tween(400, easing = LinearEasing, delayMillis = index * 100),
                     repeatMode = RepeatMode.Reverse
                 ),
                 label = "dot_$index"
@@ -516,7 +566,7 @@ fun AIInputField() {
 
     LaunchedEffect(Unit) {
         for (i in fullPlaceholder.indices) {
-            delay(50)
+            delay(20)
             placeholderText = fullPlaceholder.substring(0, i + 1)
         }
     }
@@ -848,7 +898,7 @@ fun FeatureGrid(
                     onClick = onAnnouncementsClick,
                     buttonWidth = buttonWidth,
                     buttonHeight = buttonHeight,
-                    delayMs = 150
+                    delayMs = 100
                 )
             }
 
@@ -863,7 +913,7 @@ fun FeatureGrid(
                     onClick = {},
                     buttonWidth = buttonWidth,
                     buttonHeight = buttonHeight,
-                    delayMs = 300
+                    delayMs = 200
                 )
 
                 FeatureButton(
@@ -873,7 +923,7 @@ fun FeatureGrid(
                     onClick = onCampusClick,
                     buttonWidth = buttonWidth,
                     buttonHeight = buttonHeight,
-                    delayMs = 450
+                    delayMs = 300
                 )
             }
         }
@@ -934,7 +984,7 @@ fun FeatureButton(
 
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn(tween(400)) + scaleIn(initialScale = 0.8f, animationSpec = tween(400))
+        enter = fadeIn(tween(200)) + scaleIn(initialScale = 0.8f, animationSpec = tween(200))
     ) {
         Box(
             modifier = Modifier

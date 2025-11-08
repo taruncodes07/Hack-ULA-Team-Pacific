@@ -61,16 +61,6 @@ fun EmailAuthScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Blurred campus background
-        Image(
-            painter = painterResource(id = R.drawable.campus_background),
-            contentDescription = "Campus Background",
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(25.dp),
-            contentScale = ContentScale.Crop
-        )
-
         // Gradient overlay
         Box(
             modifier = Modifier
@@ -78,9 +68,9 @@ fun EmailAuthScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.7f),
-                            Color.Black.copy(alpha = 0.85f),
-                            Color(0xFF1A0A2E).copy(alpha = 0.9f)
+                            Color.Black.copy(alpha = 0.9f),
+                            Color.Black.copy(alpha = 0.95f),
+                            Color(0xFF1A0A2E)
                         )
                     )
                 )

@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -218,24 +219,17 @@ fun AnimatedWelcomeText() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Welcome to",
+                text = "Welcome to your",
                 color = AppPurple.copy(alpha = 0.6f),
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Campus Navigation",
+                text = "Digital Campus Companion",
                 color = AppPurple,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Your digital campus companion",
-                color = AppPurple.copy(alpha = 0.5f),
-                fontSize = 14.sp,
                 textAlign = TextAlign.Center
             )
         }

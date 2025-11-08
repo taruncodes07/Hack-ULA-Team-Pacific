@@ -176,7 +176,7 @@ fun loadCalendarEventsFromAssets(context: android.content.Context): List<Calenda
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GuestMainPage() {
+fun GuestMainPage(onLogout: () -> Unit = {}) {
     val context = LocalContext.current
     val userProfile = remember { UserRepository.getCurrentProfile(context) }
 
@@ -308,7 +308,11 @@ fun GuestMainPage() {
     if (showProfileDialog) {
         ProfileDialog(
             userProfile = userProfile,
-            onDismiss = { showProfileDialog = false }
+            onDismiss = { showProfileDialog = false },
+            onLogout = {
+                UserRepository.signOut(context)
+                onLogout()
+            }
         )
     }
 
@@ -339,8 +343,7 @@ fun ProfileHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .clickable(onClick = onProfileClick),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar
@@ -349,7 +352,8 @@ fun ProfileHeader(
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(AppPurple.copy(alpha = 0.3f))
-                .border(2.dp, AppPurple, CircleShape),
+                .border(2.dp, AppPurple, CircleShape)
+                .clickable(onClick = onProfileClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -521,7 +525,8 @@ fun NavButton(
 @Composable
 fun ProfileDialog(
     userProfile: UserProfile?,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -592,11 +597,7 @@ fun ProfileDialog(
                         .padding(24.dp)
                 ) {
                     Button(
-                        onClick = {
-                            UserRepository.signOut(context)
-                            // Exit app - user needs to restart to login again
-                            android.os.Process.killProcess(android.os.Process.myPid())
-                        },
+                        onClick = onLogout,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppRed
                         ),

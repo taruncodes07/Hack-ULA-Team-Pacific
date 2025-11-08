@@ -35,7 +35,7 @@ fun NavGraph(
             composable(
                 route = NavRoutes.Splash.route,
                 exitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 }
             ) {
                 SplashScreen(
@@ -50,13 +50,13 @@ fun NavGraph(
             composable(
                 route = NavRoutes.LoginSelection.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 },
                 popEnterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 }
             ) {
                 LoginSelectionScreen(
@@ -73,13 +73,13 @@ fun NavGraph(
             composable(
                 route = NavRoutes.EmailAuth.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 }
             ) {
                 EmailAuthScreen(
@@ -99,13 +99,13 @@ fun NavGraph(
             composable(
                 route = NavRoutes.GuestAuth.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 }
             ) {
                 GuestAuthScreen(
@@ -125,10 +125,10 @@ fun NavGraph(
             composable(
                 route = NavRoutes.GuestMainPage.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 }
             ) {
                 // Handle back button press to exit app
@@ -136,23 +136,29 @@ fun NavGraph(
                     onExitApp()
                 }
 
-                GuestMainPage()
+                GuestMainPage(
+                    onLogout = {
+                        navController.navigate(NavRoutes.LoginSelection.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             // Student Main Page Route
             composable(
                 route = NavRoutes.StudentMainPage.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(300))
+                    fadeOut(animationSpec = tween(400))
                 },
                 popEnterTransition = {
-                    fadeIn(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400))
                 }
             ) {
                 // Handle back button press to exit app
@@ -167,6 +173,11 @@ fun NavGraph(
                     },
                     onCampusClick = {
                         navController.navigate(NavRoutes.CampusSection.route)
+                    },
+                    onLogout = {
+                        navController.navigate(NavRoutes.LoginSelection.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -177,14 +188,14 @@ fun NavGraph(
                 enterTransition = {
                     slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = tween(600)
-                    ) + fadeIn(tween(600))
+                         animationSpec = tween(400)
+                    ) + fadeIn(tween(400))
                 },
                 exitTransition = {
                     slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = tween(600)
-                    ) + fadeOut(tween(600))
+                        animationSpec = tween(400)
+                    ) + fadeOut(tween(400))
                 }
             ) {
                 AnnouncementsScreen(
@@ -200,14 +211,14 @@ fun NavGraph(
                 enterTransition = {
                     slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = tween(600)
-                    ) + fadeIn(tween(600))
+                        animationSpec = tween(400)
+                    ) + fadeIn(tween(400))
                 },
                 exitTransition = {
                     slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = tween(600)
-                    ) + fadeOut(tween(600))
+                        animationSpec = tween(400)
+                    ) + fadeOut(tween(400))
                 }
             ) {
                 CampusScreen(

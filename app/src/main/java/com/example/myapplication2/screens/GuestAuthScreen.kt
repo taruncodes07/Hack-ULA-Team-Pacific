@@ -285,9 +285,12 @@ fun GreenButton(
 @Composable
 fun SuccessAnimation() {
     var scale by remember { mutableStateOf(0f) }
+    var showText by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         scale = 1f
+        delay(600)  // Wait for checkmark animation
+        showText = true
     }
 
     val animatedScale by animateFloatAsState(
@@ -299,14 +302,42 @@ fun SuccessAnimation() {
         label = "success_scale"
     )
 
-    Icon(
-        imageVector = Icons.Default.CheckCircle,
-        contentDescription = "Success",
-        tint = AppGreen,
-        modifier = Modifier
-            .size(120.dp)
-            .scale(animatedScale)
-    )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = "Success",
+            tint = AppGreen,
+            modifier = Modifier
+                .size(120.dp)
+                .scale(animatedScale)
+        )
+
+        AnimatedVisibility(
+            visible = showText,
+            enter = fadeIn(tween(600)) + slideInVertically { it / 4 }
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Verified!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = AppGreen,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                Text(
+                    text = "Welcome to Campus Network",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AppPurple,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
 }
 
 fun isValidPhoneNumber(phone: String): Boolean {
