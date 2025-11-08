@@ -11,7 +11,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -46,6 +48,7 @@ fun LoginSelectionScreen(
 ) {
     val context = LocalContext.current
     var isVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     // Load Campus Network logo from assets
     val campusNetworkLogo = remember {
@@ -100,16 +103,17 @@ fun LoginSelectionScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(scrollState)
                     .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
                 Spacer(modifier = Modifier.height(40.dp))
 
                 // Top section with logo and title
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center
                 ) {
                     // Floating Campus Network Logo
@@ -121,11 +125,15 @@ fun LoginSelectionScreen(
                     AnimatedWelcomeText()
                 }
 
+                Spacer(modifier = Modifier.height(60.dp))
+
                 // Bottom section with buttons
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(24.dp),
-                    modifier = Modifier.padding(bottom = 60.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 60.dp)
                 ) {
                     Text(
                         text = "Choose your access method",

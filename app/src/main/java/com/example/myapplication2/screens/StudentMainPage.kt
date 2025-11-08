@@ -59,6 +59,7 @@ fun StudentMainPage(
     onCampusClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
     onPersonalInfoClick: () -> Unit = {},
+    onClassroomClick: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -70,9 +71,44 @@ fun StudentMainPage(
     var showButtons by remember { mutableStateOf(false) }
     var showCampusScreen by remember { mutableStateOf(false) }
     var showCalendarScreen by remember { mutableStateOf(false) }
+    var showClassroomScreen by remember { mutableStateOf(false) }
 
     // Get current email profile
     val emailProfile = remember { UserRepository.getCurrentEmailProfile(context) }
+
+    // Check if SDK is available and get AI state
+    val sdkAvailable = remember {
+        try {
+            Class.forName("com.runanywhere.sdk.public.RunAnywhere")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
+
+    // Initialize ViewModel only if SDK is available
+    val viewModel = if (sdkAvailable) {
+        remember {
+            try {
+                com.example.myapplication2.viewmodels.AINavigationViewModel(context)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    } else {
+        null
+    }
+
+    val agentState = viewModel?.agentState?.collectAsState()?.value
+        ?: com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Idle
+
+    // Determine if buttons should be enabled
+    val buttonsEnabled = when (agentState) {
+        is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Downloading,
+        is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.LoadingModel -> false
+
+        else -> true
+    }
 
     // Load campus background from assets (collegeimage.png/jpg)
     val campusBackground = remember {
@@ -112,8 +148,8 @@ fun StudentMainPage(
     }
 
     // Reset animations when returning from Campus or Calendar screens
-    LaunchedEffect(showCampusScreen, showCalendarScreen) {
-        if (!showCampusScreen && !showCalendarScreen) {
+    LaunchedEffect(showCampusScreen, showCalendarScreen, showClassroomScreen) {
+        if (!showCampusScreen && !showCalendarScreen && !showClassroomScreen) {
             // Small delay then show buttons again
             showButtons = false
             delay(50)
@@ -121,11 +157,17 @@ fun StudentMainPage(
         }
     }
 
-    // Show Campus Screen if requested
+    // Show screens
     if (showCampusScreen) {
         CampusScreen(onBack = { showCampusScreen = false })
     } else if (showCalendarScreen) {
         AcademicCalendarScreen(onBack = { showCalendarScreen = false })
+    } else if (showClassroomScreen) {
+        // Call the navigation callback instead of showing inline
+        LaunchedEffect(Unit) {
+            showClassroomScreen = false
+            onClassroomClick()
+        }
     } else {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -167,133 +209,142 @@ fun StudentMainPage(
                 enter = fadeIn(tween(200))
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Column(
+                    // Main scrollable content
+                    LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Spacer(modifier = Modifier.height(40.dp))
-
-                        // Student Info Header
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // Name with avatar - Clickable to open profile
-                            AnimatedVisibility(
-                                visible = showName,
-                                enter = fadeIn(tween(200))
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = Modifier
-                                ) {
-                                    // Avatar
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .border(
-                                                width = 2.dp,
-                                                brush = Brush.sweepGradient(
-                                                    colors = listOf(
-                                                        AppPurple,
-                                                        AppPurpleSecondary,
-                                                        AppPurple
-                                                    )
-                                                ),
-                                                shape = CircleShape
-                                            )
-                                            .background(AppPurple.copy(alpha = 0.3f), CircleShape)
-                                            .clickable { onPersonalInfoClick() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = emailProfile?.name?.firstOrNull()?.toString()
-                                                ?: "S",
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = AppWhite
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    // Name
-                                    Text(
-                                        text = emailProfile?.name ?: "Student",
-                                        fontSize = 32.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AppPurple,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Roll number + branch with slide-in
-                            AnimatedVisibility(
-                                visible = showRollNumber,
-                                enter = fadeIn(tween(200)) + slideInVertically(
-                                    initialOffsetY = { 50 },
-                                    animationSpec = tween(200)
-                                )
-                            ) {
-                                Text(
-                                    text = "${emailProfile?.rollNumber ?: "1RV23AI001"} | ${emailProfile?.department ?: "AI & ML Department"}",
-                                    fontSize = 14.sp,
-                                    color = AppLightGrey,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                        item {
+                            Spacer(modifier = Modifier.height(40.dp))
                         }
 
-                        Spacer(modifier = Modifier.height(48.dp))
-
-                        // AI Assistant Section
-                        AnimatedVisibility(
-                            visible = showAI,
-                            enter = fadeIn(tween(200)) + scaleIn(
-                                initialScale = 0.8f,
-                                animationSpec = tween(200)
-                            )
-                        ) {
+                        // Student Info Header
+                        item {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                AIAssistantCircle()
+                                // Name with avatar - Clickable to open profile
+                                AnimatedVisibility(
+                                    visible = showName,
+                                    enter = fadeIn(tween(200))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier
+                                    ) {
+                                        // Avatar
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .border(
+                                                    width = 2.dp,
+                                                    brush = Brush.sweepGradient(
+                                                        colors = listOf(
+                                                            AppPurple,
+                                                            AppPurpleSecondary,
+                                                            AppPurple
+                                                        )
+                                                    ),
+                                                    shape = CircleShape
+                                                )
+                                                .background(
+                                                    AppPurple.copy(alpha = 0.3f),
+                                                    CircleShape
+                                                )
+                                                .clickable { onPersonalInfoClick() },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = emailProfile?.name?.firstOrNull()?.toString()
+                                                    ?: "S",
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = AppWhite
+                                            )
+                                        }
 
-                                Spacer(modifier = Modifier.height(24.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        // Name
+                                        Text(
+                                            text = emailProfile?.name ?: "Student",
+                                            fontSize = 32.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = AppPurple,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Roll number + branch with slide-in
+                                AnimatedVisibility(
+                                    visible = showRollNumber,
+                                    enter = fadeIn(tween(200)) + slideInVertically(
+                                        initialOffsetY = { 50 },
+                                        animationSpec = tween(200)
+                                    )
+                                ) {
+                                    Text(
+                                        text = "${emailProfile?.rollNumber ?: "1RV23AI001"} | ${emailProfile?.department ?: "AI & ML Department"}",
+                                        fontSize = 14.sp,
+                                        color = AppLightGrey,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
 
-                        // AI Input Field
-                        AnimatedVisibility(
-                            visible = showInput,
-                            enter = fadeIn(tween(200)) + expandVertically()
-                        ) {
-                            AIInputField()
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
                         }
 
-                        Spacer(modifier = Modifier.height(40.dp))
-
-                        // Feature Grid (4 buttons)
-                        AnimatedVisibility(
-                            visible = showButtons,
-                            enter = fadeIn(tween(200))
-                        ) {
-                            FeatureGrid(
-                                onAnnouncementsClick = onAnnouncementsClick,
-                                onCampusClick = { showCampusScreen = true },
-                                onCalendarClick = { showCalendarScreen = true },
-                                onPersonalInfoClick = onPersonalInfoClick
-                            )
+                        // AI Assistant Section
+                        item {
+                            AnimatedVisibility(
+                                visible = showAI && showInput,
+                                enter = fadeIn(tween(200)) + expandVertically()
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    AIAssistantCircle()
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    AIInputField()
+                                }
+                            }
                         }
 
-                        Spacer(modifier = Modifier.weight(1f))
+                        item {
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
+
+                        // Feature Grid (6 buttons) - Pass buttonsEnabled state
+                        item {
+                            AnimatedVisibility(
+                                visible = showButtons,
+                                enter = fadeIn(tween(200))
+                            ) {
+                                FeatureGrid(
+                                    onAnnouncementsClick = onAnnouncementsClick,
+                                    onCampusClick = { showCampusScreen = true },
+                                    onCalendarClick = { showCalendarScreen = true },
+                                    onPersonalInfoClick = onPersonalInfoClick,
+                                    buttonsEnabled = buttonsEnabled,
+                                    onClassroomClick = { showClassroomScreen = true }
+                                )
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
                     }
 
                     // Logout button in top-right corner
@@ -526,7 +577,7 @@ fun AIAssistantCircle() {
                 )
         )
 
-        // Main circle
+        // Main circle with Navi logo
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -551,11 +602,14 @@ fun AIAssistantCircle() {
             if (showListening) {
                 ListeningAnimation()
             } else {
-                Text(
-                    text = "AI",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppWhite
+                // Navi logo image
+                Image(
+                    painter = painterResource(id = R.mipmap.navilogo_foreground),
+                    contentDescription = "Navi - AI Assistant",
+                    modifier = Modifier
+                        .size(90.dp)
+                        .padding(8.dp),
+                    contentScale = ContentScale.Fit
                 )
             }
         }
@@ -592,11 +646,42 @@ fun ListeningAnimation() {
 }
 
 @Composable
-fun AIInputField() {
+fun AIInputField(responseState: MutableState<String>? = null) {
+    val context = LocalContext.current
+
+    // Check if SDK is available
+    val sdkAvailable = remember {
+        try {
+            Class.forName("com.runanywhere.sdk.public.RunAnywhere")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
+
+    // Initialize ViewModel only if SDK is available
+    val viewModel = if (sdkAvailable) {
+        remember {
+            try {
+                com.example.myapplication2.viewmodels.AINavigationViewModel(context)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    } else {
+        null
+    }
+
+    val agentState = viewModel?.agentState?.collectAsState()?.value
+        ?: com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Error("SDK not synced")
+    val response = viewModel?.response?.collectAsState()?.value ?: ""
+    if (responseState != null) responseState.value = response
+    val downloadProgress = viewModel?.downloadProgress?.collectAsState()?.value
+    val loadingProgress = viewModel?.loadingProgress?.collectAsState()?.value
+
     var text by remember { mutableStateOf("") }
     var placeholderText by remember { mutableStateOf("") }
     var showSuggestions by remember { mutableStateOf(false) }
-    var aiResponse by remember { mutableStateOf("") }
     val fullPlaceholder = "Ask for app navigation..."
 
     // Floating animation
@@ -623,6 +708,195 @@ fun AIInputField() {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Show SDK Not Available Message
+        if (!sdkAvailable) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = AppPurple.copy(alpha = 0.2f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, AppPurple.copy(alpha = 0.5f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Warning",
+                        tint = AppPurple,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "AI Agent Not Available",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppPurple,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Please sync Gradle in Android Studio:\nClick 'Sync Now' banner at top",
+                        fontSize = 12.sp,
+                        color = AppLightGrey,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+            return@Column // Exit early if SDK not available
+        }
+
+        // Show AI Agent Status (only if SDK available)
+        when (val state = agentState) {
+            is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.CheckingModel -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = AppPurple,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Checking model...",
+                        color = AppPurple,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.NeedDownload -> {
+                // Show download button
+                Button(
+                    onClick = { viewModel?.downloadModel() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppPurple
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Icon(Icons.Default.Download, "Download", modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Download AI Model (119MB)")
+                }
+            }
+            is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.LoadingModel -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = AppPurple,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Loading AI Agent...",
+                        color = AppPurple,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+            is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Error -> {
+                if (!state.message.contains("not available") && !state.message.contains("SDK not synced")) {
+                    Text(
+                        text = state.message,
+                        color = AppRed,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Thinking -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = AppPurple,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "AI is thinking...",
+                        color = AppPurple,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+            else -> {
+                // Ready, Idle, or Downloading - show nothing here (progress bars show below)
+            }
+        }
+
+        // Download progress
+        downloadProgress?.let { progress ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = AppPurple,
+                    trackColor = AppPurple.copy(alpha = 0.2f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Downloading: ${(progress * 100).toInt()}%",
+                    color = AppPurple,
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+        // Loading progress
+        loadingProgress?.let { progress ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LinearProgressIndicator(
+                    progress = progress / 100f,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = AppPurple,
+                    trackColor = AppPurple.copy(alpha = 0.2f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Loading AI Model: $progress%",
+                    color = AppPurple,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -662,7 +936,13 @@ fun AIInputField() {
                         color = Color.White.copy(alpha = 0.08f),
                         shape = RoundedCornerShape(28.dp)
                     )
-                    .clickable { showSuggestions = !showSuggestions }
+                    .clickable(
+                        enabled = sdkAvailable && agentState == com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Ready
+                    ) {
+                        if (sdkAvailable && agentState == com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Ready) {
+                            showSuggestions = !showSuggestions
+                        }
+                    }
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -672,14 +952,7 @@ fun AIInputField() {
                     // Input text
                     BasicTextField(
                         value = text,
-                        onValueChange = {
-                            text = it
-                            if (it.isNotEmpty()) {
-                                aiResponse = processAIQuery(it)
-                            } else {
-                                aiResponse = ""
-                            }
-                        },
+                        onValueChange = { text = it },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = AppWhite,
                             fontSize = 14.sp
@@ -703,25 +976,27 @@ fun AIInputField() {
                             }
                         },
                         singleLine = true,
-                        cursorBrush = SolidColor(AppPurple)
+                        cursorBrush = SolidColor(AppPurple),
+                        enabled = sdkAvailable && agentState is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Ready
                     )
 
                     // Mic icon
                     Icon(
                         imageVector = Icons.Default.Mic,
                         contentDescription = "Voice Command",
-                        tint = AppPurple,
+                        tint = AppPurple.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Send icon (shows when text is entered)
-                    if (text.isNotEmpty()) {
+                    // Send icon (shows when text is entered and model is ready)
+                    if (text.isNotEmpty() && sdkAvailable && agentState is com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Ready) {
                         IconButton(
                             onClick = {
-                                aiResponse = processAIQuery(text)
-                                showSuggestions = true
+                                viewModel?.askQuestion(text)
+                                text = ""
+                                showSuggestions = false
                             },
                             modifier = Modifier.size(24.dp)
                         ) {
@@ -738,7 +1013,7 @@ fun AIInputField() {
         }
 
         // Quick suggestions
-        if (showSuggestions && text.isEmpty()) {
+        if (sdkAvailable && showSuggestions && text.isEmpty() && agentState == com.example.myapplication2.viewmodels.AINavigationViewModel.AgentState.Ready) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Column(
@@ -746,34 +1021,34 @@ fun AIInputField() {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SuggestionChip(
-                    text = "How to check announcements?",
-                    icon = Icons.Default.Notifications,
+                    text = "How to check crowd?",
+                    icon = Icons.Default.People,
                     onClick = {
-                        text = "How to check announcements?"
-                        aiResponse = processAIQuery(text)
+                        viewModel?.askQuestion("How to check crowd?")
+                        showSuggestions = false
                     }
                 )
                 SuggestionChip(
-                    text = "Where is campus hub?",
-                    icon = Icons.Default.AccountBalance,
+                    text = "How to order food?",
+                    icon = Icons.Default.Restaurant,
                     onClick = {
-                        text = "Where is campus hub?"
-                        aiResponse = processAIQuery(text)
+                        viewModel?.askQuestion("How to order food?")
+                        showSuggestions = false
                     }
                 )
                 SuggestionChip(
-                    text = "How to view timetable?",
-                    icon = Icons.Default.Schedule,
+                    text = "Where are my books?",
+                    icon = Icons.Default.MenuBook,
                     onClick = {
-                        text = "How to view timetable?"
-                        aiResponse = processAIQuery(text)
+                        viewModel?.askQuestion("Where are my borrowed books?")
+                        showSuggestions = false
                     }
                 )
             }
         }
 
         // AI Response
-        if (aiResponse.isNotEmpty()) {
+        if (response.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Card(
@@ -789,14 +1064,14 @@ fun AIInputField() {
                     verticalAlignment = Alignment.Top
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = Icons.Default.SmartToy,
                         contentDescription = "AI Response",
                         tint = AppPurple,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = aiResponse,
+                        text = response,
                         color = AppWhite,
                         fontSize = 14.sp,
                         lineHeight = 20.sp
@@ -915,92 +1190,87 @@ fun FeatureGrid(
     onAnnouncementsClick: () -> Unit,
     onCampusClick: () -> Unit,
     onCalendarClick: () -> Unit,
-    onPersonalInfoClick: () -> Unit
+    onPersonalInfoClick: () -> Unit,
+    buttonsEnabled: Boolean = true,
+    onClassroomClick: () -> Unit = {}
 ) {
-    BoxWithConstraints(
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        val buttonWidth = maxWidth / 2.2f // Divide by 2.2 to account for spacing
-        val buttonHeight = maxHeight / 3.2f
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                FeatureButton(
-                    icon = Icons.Default.Computer,
-                    label = "Classroom",
-                    isActive = false,
-                    onClick = {},
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 0
-                )
+            FeatureButton(
+                icon = Icons.Default.Computer,
+                label = "Classroom",
+                isActive = true,
+                isEnabled = buttonsEnabled,
+                onClick = onClassroomClick,
+                modifier = Modifier.weight(1f),
+                delayMs = 0
+            )
 
-                FeatureButton(
-                    icon = Icons.Default.Notifications,
-                    label = "Announcements",
-                    isActive = true,
-                    onClick = onAnnouncementsClick,
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 100
-                )
-            }
+            FeatureButton(
+                icon = Icons.Default.Notifications,
+                label = "Announcements",
+                isActive = true,
+                isEnabled = buttonsEnabled,
+                onClick = onAnnouncementsClick,
+                modifier = Modifier.weight(1f),
+                delayMs = 100
+            )
+        }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                FeatureButton(
-                    icon = Icons.Default.Chat,
-                    label = "Social",
-                    isActive = false,
-                    onClick = {},
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 200
-                )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            FeatureButton(
+                icon = Icons.Default.Chat,
+                label = "Social",
+                isActive = false,
+                isEnabled = buttonsEnabled,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+                delayMs = 200
+            )
 
-                FeatureButton(
-                    icon = Icons.Default.AccountBalance,
-                    label = "Campus",
-                    isActive = true,
-                    onClick = onCampusClick,
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 300
-                )
-            }
+            FeatureButton(
+                icon = Icons.Default.AccountBalance,
+                label = "Campus",
+                isActive = true,
+                isEnabled = buttonsEnabled,
+                onClick = onCampusClick,
+                modifier = Modifier.weight(1f),
+                delayMs = 300
+            )
+        }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                FeatureButton(
-                    icon = Icons.Default.Event,
-                    label = "Calendar",
-                    isActive = true,
-                    onClick = onCalendarClick,
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 400
-                )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            FeatureButton(
+                icon = Icons.Default.Event,
+                label = "Calendar",
+                isActive = true,
+                isEnabled = buttonsEnabled,
+                onClick = onCalendarClick,
+                modifier = Modifier.weight(1f),
+                delayMs = 400
+            )
 
-                FeatureButton(
-                    icon = Icons.Default.Person,
-                    label = "Personal Info",
-                    isActive = true,
-                    onClick = onPersonalInfoClick,
-                    buttonWidth = buttonWidth,
-                    buttonHeight = buttonHeight,
-                    delayMs = 500
-                )
-            }
+            FeatureButton(
+                icon = Icons.Default.Person,
+                label = "Personal Info",
+                isActive = true,
+                isEnabled = buttonsEnabled,
+                onClick = onPersonalInfoClick,
+                modifier = Modifier.weight(1f),
+                delayMs = 500
+            )
         }
     }
 }
@@ -1010,13 +1280,16 @@ fun FeatureButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     isActive: Boolean,
+    isEnabled: Boolean,
     onClick: () -> Unit,
-    buttonWidth: androidx.compose.ui.unit.Dp,
-    buttonHeight: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
     delayMs: Int = 0
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
+    // Determine if button should be clickable
+    val canClick = isActive && isEnabled
 
     // Floating animation
     val infiniteTransition = rememberInfiniteTransition(label = "float_$label")
@@ -1043,7 +1316,7 @@ fun FeatureButton(
     )
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && isActive) 1.05f else 1f,
+        targetValue = if (isPressed && canClick) 1.05f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -1052,9 +1325,8 @@ fun FeatureButton(
     )
 
     Box(
-        modifier = Modifier
-            .width(buttonWidth)
-            .height(buttonHeight)
+        modifier = modifier
+            .height(140.dp)
             .offset(y = floatOffset.dp)
     ) {
         // Main button 
@@ -1064,7 +1336,7 @@ fun FeatureButton(
                 .scale(scale)
                 .border(
                     width = 1.5.dp,
-                    brush = if (isActive) {
+                    brush = if (canClick) {
                         Brush.linearGradient(
                             colors = listOf(
                                 AppPurple.copy(alpha = glowAlpha),
@@ -1082,13 +1354,17 @@ fun FeatureButton(
                     shape = RoundedCornerShape(24.dp)
                 )
                 .background(
-                    color = Color.White.copy(alpha = if (isActive) 0.08f else 0.03f),
+                    color = if (canClick) {
+                        Color.White.copy(alpha = 0.08f)
+                    } else {
+                        Color.White.copy(alpha = 0.03f)
+                    },
                     shape = RoundedCornerShape(24.dp)
                 )
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    enabled = isActive,
+                    enabled = canClick,
                     onClick = onClick
                 )
                 .padding(16.dp),
@@ -1103,8 +1379,8 @@ fun FeatureButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = if (isActive) AppPurple else AppLightGrey.copy(alpha = 0.5f),
-                    modifier = Modifier.size(56.dp)
+                    tint = if (canClick) AppPurple else AppLightGrey.copy(alpha = 0.5f),
+                    modifier = Modifier.size(48.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1112,11 +1388,11 @@ fun FeatureButton(
                 // Label with better visibility
                 Text(
                     text = label,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isActive) AppPurple else AppLightGrey.copy(alpha = 0.6f),
+                    color = if (canClick) AppPurple else AppLightGrey.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
-                    maxLines = 1
+                    maxLines = 2
                 )
             }
         }

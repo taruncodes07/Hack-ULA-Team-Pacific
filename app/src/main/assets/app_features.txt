@@ -1,0 +1,75 @@
+CAMPUS NETWORK APP NAVIGATION GUIDE
+====================================
+
+HOW TO CHECK CROWD STATUS:
+Step 1: Tap "Campus" button on main page
+Step 2: Tap "Live Crowd" 
+Step 3: View crowd status for Canteen, Library, Gym, or Labs
+
+HOW TO ORDER FOOD:
+Step 1: Tap "Campus" button on main page
+Step 2: Tap "Order Food"
+Step 3: Browse menu and select items
+Step 4: Place order
+
+HOW TO SEND FEEDBACK:
+Step 1: Tap "Campus" button on main page
+Step 2: Tap "Send Feedback"
+Step 3: Choose "Submit New Feedback"
+Step 4: Select category (Library/Canteen/Hygiene/Other)
+Step 5: Write feedback and submit
+
+HOW TO VIEW CAMPUS NOTICES:
+Step 1: Tap "Campus" button on main page
+Step 2: Tap "Notices"
+Step 3: Read campus-specific announcements
+
+HOW TO VIEW ANNOUNCEMENTS:
+Step 1: Tap "Announcements" button on main page
+Step 2: Browse all announcements
+Step 3: Filter by category if needed
+
+HOW TO CHECK ACADEMIC CALENDAR:
+Step 1: Tap "Calendar" button on main page
+Step 2: Browse months using arrow buttons
+Step 3: Tap on date to view event details
+
+HOW TO ACCESS CLASSROOM FEATURES:
+Step 1: Tap "Classroom" button on main page
+Step 2: Choose:
+   - "Attendance" to view attendance calendar (green=present, red=absent)
+   - "Materials" to access study PDFs (Chemistry, Math, Previous Papers)
+   - "Communication" to chat with teachers and classmates
+   - "Timetable" to view weekly schedule
+
+HOW TO VIEW BORROWED BOOKS:
+Step 1: Tap "Personal Info" button on main page
+Step 2: Expand "Library Details" section
+Step 3: Tap "Show More" to see all borrowed books
+
+HOW TO CHECK PAYMENT STATUS:
+Step 1: Tap "Personal Info" button on main page
+Step 2: Expand "Payment Details" section
+Step 3: View all pending and past payments
+
+HOW TO VIEW TIMETABLE (Guest):
+Step 1: Login as Guest
+Step 2: Tap "Timetable" button
+Step 3: Pinch to zoom, drag to pan
+
+HOW TO LOGOUT:
+Tap the logout button (exit icon) in top-right corner
+
+MAIN BUTTONS ON HOME:
+- Classroom (attendance, materials, communication, timetable)
+- Announcements (campus announcements)
+- Social (coming soon)
+- Campus (food, notices, feedback, crowd check)
+- Calendar (academic events)
+- Personal Info (profile, library, payments)
+
+CAMPUS HUB FEATURES:
+- Order Food - Pre-order from canteen
+- Notices - Campus-specific announcements
+- Send Feedback - Report issues about Library/Canteen/Hygiene/Other
+- Live Crowd - Check crowd at Canteen/Library/Gym/Labs

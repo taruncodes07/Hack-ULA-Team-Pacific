@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.myapplication2.screens.*
+import com.example.myapplication2.screens.classroom.ClassroomScreen
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -187,6 +188,9 @@ fun NavGraph(
                         navController.navigate(NavRoutes.LoginSelection.route) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onClassroomClick = {
+                        navController.navigate(NavRoutes.Classroom.route)
                     }
                 )
             }
@@ -277,6 +281,29 @@ fun NavGraph(
                 }
             ) {
                 PersonalInfoScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // Classroom Screen Route
+            composable(
+                route = NavRoutes.Classroom.route,
+                enterTransition = {
+                    slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = tween(400)
+                    ) + fadeIn(tween(400))
+                },
+                exitTransition = {
+                    slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(400)
+                    ) + fadeOut(tween(400))
+                }
+            ) {
+                ClassroomScreen(
                     onBack = {
                         navController.popBackStack()
                     }

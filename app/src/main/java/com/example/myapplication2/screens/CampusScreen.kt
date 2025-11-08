@@ -1,5 +1,6 @@
 package com.example.myapplication2.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -87,6 +88,15 @@ fun CampusScreen(onBack: () -> Unit) {
     val guestProfile = remember { UserRepository.getCurrentProfile(context) }
 
     val userName = emailProfile?.name ?: guestProfile?.name ?: "Student"
+
+    // Handle back button - if section is open, close it; otherwise go back
+    BackHandler {
+        if (currentSection != CampusSection.NONE) {
+            currentSection = CampusSection.NONE
+        } else {
+            onBack()
+        }
+    }
 
     // Entry animation
     LaunchedEffect(Unit) {
@@ -353,7 +363,7 @@ fun CampusButton(
                         indication = null,
                         onClick = onClick
                     )
-                    .padding(20.dp),
+                    .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -367,25 +377,27 @@ fun CampusButton(
                             imageVector = icon,
                             contentDescription = label,
                             tint = AppPurple.copy(alpha = glowAlpha * 0.5f),
-                            modifier = Modifier.size(60.dp)
+                            modifier = Modifier.size(48.dp)
                         )
                         // Main icon
                         Icon(
                             imageVector = icon,
                             contentDescription = label,
                             tint = AppPurple,
-                            modifier = Modifier.size(56.dp)
+                            modifier = Modifier.size(44.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
                         text = label,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppWhite,
-                        textAlign = TextAlign.Center
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppPurple,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        lineHeight = 15.sp
                     )
                 }
             }
