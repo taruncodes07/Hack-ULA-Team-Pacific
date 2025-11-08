@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+# AI Model Files (too large for GitHub)
+**/assets/models/*.gguf
+**/assets/models/
+app/src/main/assets/models/

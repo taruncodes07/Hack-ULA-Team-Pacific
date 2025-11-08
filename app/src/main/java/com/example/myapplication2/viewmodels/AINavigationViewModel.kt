@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.File
 
 class AINavigationViewModel(private val context: Context) : ViewModel() {
 
@@ -49,10 +50,42 @@ class AINavigationViewModel(private val context: Context) : ViewModel() {
         // Load features guide from assets
         loadFeaturesGuide()
 
+        // Delete any cached models on init to force fresh download
+        deleteCachedModels()
+
         // Wait a bit for SDK to initialize, then check model
         viewModelScope.launch {
             delay(3000) // Give SDK time to initialize
             checkModel()
+        }
+    }
+
+    /**
+     * Delete cached models to force re-download every time
+     */
+    private fun deleteCachedModels() {
+        try {
+            // Try to delete models from common cache directories
+            val cacheDir = context.cacheDir
+            val filesDir = context.filesDir
+
+            // Delete RunAnywhere model cache
+            val modelCacheDirs = listOf(
+                File(cacheDir, "models"),
+                File(cacheDir, "runanywhere"),
+                File(filesDir, "models"),
+                File(filesDir, "runanywhere")
+            )
+
+            modelCacheDirs.forEach { dir ->
+                if (dir.exists()) {
+                    Log.d("AIAgent", "ViewModel: Deleting cache directory: ${dir.absolutePath}")
+                    dir.deleteRecursively()
+                    Log.d("AIAgent", "ViewModel: Cache deleted")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AIAgent", "ViewModel: Error deleting cache: ${e.message}", e)
         }
     }
 
@@ -73,7 +106,7 @@ class AINavigationViewModel(private val context: Context) : ViewModel() {
     }
 
     /**
-     * Check if model is registered and downloaded
+     * Check if model is registered - Always show download button (cache was deleted)
      */
     private fun checkModel() {
         viewModelScope.launch {
@@ -100,16 +133,10 @@ class AINavigationViewModel(private val context: Context) : ViewModel() {
                     "AIAgent",
                     "ViewModel: Model found - ID: ${navModel.id}, Name: ${navModel.name}"
                 )
-                Log.d("AIAgent", "ViewModel: Is downloaded: ${navModel.isDownloaded}")
 
-                if (navModel.isDownloaded) {
-                    // Model is downloaded, load it
-                    loadModel()
-                } else {
-                    // Model not downloaded, show download button
-                    _agentState.value = AgentState.NeedDownload
-                    Log.d("AIAgent", "ViewModel: Model needs download")
-                }
+                // Always show download button (cache was deleted in init)
+                _agentState.value = AgentState.NeedDownload
+                Log.d("AIAgent", "ViewModel: Ready for fresh download (cache cleared)")
 
             } catch (e: Exception) {
                 Log.e("AIAgent", "ViewModel: Error checking model: ${e.message}", e)

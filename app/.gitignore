@@ -1,1 +1,5 @@
 /build
+
+# AI Model Files (too large for GitHub)
+src/main/assets/models/*.gguf
+src/main/assets/models/
