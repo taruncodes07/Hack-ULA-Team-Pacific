@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Rohan Mathad",
+    "email": "rohan.mathad@rvce.edu.in",
+    "rollNumber": "1RV23AI001",
+    "department": "AI & ML",
+    "otp": "123456",
+    "branch": "Artificial Intelligence & Machine Learning",
+    "college": "RV College of Engineering",
+    "classNumber": "AI-2023-A",
+    "classTeacherName": "Dr. Priya Sharma",
+    "teacherContact": "+91-98765-43210",
+    "fatherName": "Suresh Mathad",
+    "fatherContact": "+91-98765-11111",
+    "address": "Bangalore, Karnataka"
+  },
+  {
+    "name": "Aditi Rao",
+    "email": "aditi.rao@rvce.edu.in",
+    "rollNumber": "1RV23AI015",
+    "department": "AI & ML",
+    "otp": "234567",
+    "branch": "Artificial Intelligence & Machine Learning",
+    "college": "RV College of Engineering",
+    "classNumber": "AI-2023-A",
+    "classTeacherName": "Dr. Priya Sharma",
+    "teacherContact": "+91-98765-43210",
+    "fatherName": "Ramesh Rao",
+    "fatherContact": "+91-98765-22222",
+    "address": "Bangalore, Karnataka"
+  },
+  {
+    "name": "Arjun Kumar",
+    "email": "arjun.kumar@rvce.edu.in",
+    "rollNumber": "1RV23AI032",
+    "department": "AI & ML",
+    "otp": "345678",
+    "branch": "Artificial Intelligence & Machine Learning",
+    "college": "RV College of Engineering",
+    "classNumber": "AI-2023-B",
+    "classTeacherName": "Prof. Rajesh Menon",
+    "teacherContact": "+91-98765-54321",
+    "fatherName": "Vijay Kumar",
+    "fatherContact": "+91-98765-33333",
+    "address": "Bangalore, Karnataka"
+  }
+]
